@@ -5,6 +5,22 @@ Documents the **sampling strategy** of the YopouLab household survey — a quasi
 design **stratified by urban form** — and its **validation**: a morphometric audit of how well the selected
 survey clusters represent the variety of urban habitat in the study area (AOI).
 
+## The sampling design, in brief
+
+Stratified two-stage cluster sampling. **Strata** = three urban habitats (regular / hybrid / informal) defined
+from the built environment by expert consultation and later consolidated into a measured spatial deprivation score.
+**First stage** = survey clusters selected by a **random draw of street paths** within each stratum
+(constraints: ≥ 300 m, ≥ 100 buildings within 50 m, 100 m spacing, waterway quotas), followed by
+**site verification with documented, criteria-based adjustments**: most clusters are delineated in place
+around their drawn path, and a minority are displaced following explicit, documented criteria — every
+adjustment is traceable via `path_id` (see notebook `2` §3). **Second stage** = systematic selection of
+households within clusters. The realised selection is therefore **quasi-random**: inclusion probabilities are
+not recoverable (estimates are reported unweighted), and representativity is audited descriptively in
+notebook `3b`. A second survey round added a purposive oversample, including two dedicated contrast clusters
+(notebook `2` §4).
+
+## Workflow
+
 The workflow has two phases:
 
 - **SAMPLING (notebooks `1`–`2`)** — define urban blocks as areal units; categorise them into three urban
@@ -19,8 +35,6 @@ The workflow has two phases:
 sampling. This keeps the provenance honest: the clusters were drawn against the expert habitat framework, not
 against the score, and notebooks `3a`–`3b` then verify, after the fact, that the sampled areas span the range
 of built environments.
-
-## Workflow
 
 | Step | Notebook / manual | Does | Key outputs |
 |---|---|---|---|
@@ -41,20 +55,6 @@ Yopougon-Attécoubé scope this repo actually uses).*
 Run the notebooks in the order `1` → `2` → `3a` → `3b`. Notebooks `1` and `3a` both build the street network
 from the same OSM queries and share the OSMnx HTTP cache (`cache/`), so the sampling phase runs without the
 validation phase and vice versa.
-
-## The sampling design, in brief
-
-Stratified two-stage cluster sampling. **Strata** = three urban habitats (regular / hybrid / informal) defined
-from the built environment by expert consultation and later consolidated into a measured spatial deprivation score.
-**First stage** = survey clusters selected by a **random draw of street paths** within each stratum
-(constraints: ≥ 300 m, ≥ 100 buildings within 50 m, 100 m spacing, waterway quotas), followed by
-**site verification with documented, criteria-based adjustments**: most clusters are delineated in place
-around their drawn path, and a minority are displaced following explicit, documented criteria — every
-adjustment is traceable via `path_id` (see notebook `2` §3). **Second stage** = systematic selection of
-households within clusters. The realised selection is therefore **quasi-random**: inclusion probabilities are
-not recoverable (estimates are reported unweighted), and representativity is audited descriptively in
-notebook `3b`. A second survey round added a purposive oversample, including two dedicated contrast clusters
-(notebook `2` §4).
 
 ## The sampling decision algorithm, step by step
 
