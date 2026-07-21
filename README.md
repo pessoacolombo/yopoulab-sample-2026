@@ -24,13 +24,12 @@ of built environments.
 | Step | Notebook / manual | Does | Key outputs |
 |---|---|---|---|
 | **1** | **`1_Urban-blocks`** | Builds the street network (OSM) and defines city **blocks** — the areal units of the sampling — by polygonising it, closing the lagoon shore and splitting on waterways | `data/temp/_check-blocks_geom.gpkg` |
-| — | *(manual)* | **Blocks are corrected by hand in QGIS** — see below | `data/temp/_check-blocks_geom_manual-corr.gpkg` |
-| **2** | *(manual)* | **Expert categorisation of the blocks into 3 habitat strata** (geographer, sociologist, epidemiologist, architect): spatial definition of the inhabited areas per stratum (blocks dissolved by stratum), largest zones retained | `data/raw/sampling_habitat-areas_reference.gpkg` |
-| **3** | **`2_Cluster-draw`** | **Randomized draw** of street paths within the habitat areas, followed by documented manual adjustments (site verification) into the final cluster areas; also documents the second-round purposive oversample | figures (archival layers, not recomputed) |
-| — | *(manual)* | **Candidate paths are delineated by hand into the final cluster areas** — see below | `../_GIS/HomeMade/_GRAPPES_final-REF.gpkg` |
-| *(the survey itself)* | | | |
-| **4a** | **`3a_Morphometrics`** | Cleans building footprints; builds morphological tessellation; computes building-, tessellation- and street-level morphometrics | `data/temp/*_momepy_bdg.gpkg`, `*_momepy_tess.gpkg`, `streets.gpkg`, `nodes.gpkg`, `edges.gpkg` |
-| **4b** | **`3b_Spatial-deprivation-score-representativity`** | **Part A:** scores every building with 9 directional flags (spatially smoothed, quintile tails) into a graded **spatial deprivation score (−1..8)**. **Part B:** audits the diversity and representativity of the built environments sampled by the clusters, against the **AOI** (HDSS frame) and against **Yopougon as a whole** (expansion frame) | `data/output/buildings_spatial-deprivation-scored.gpkg`, `blocks_spatial-deprivation-scored.gpkg`; figures and tables |
+| *1.1* | *manual corrections* | **Blocks are corrected by hand in QGIS** — see below | `data/temp/_check-blocks_geom_manual-corr.gpkg` |
+| *1.2* | *manual corrections* | **Expert categorisation of the blocks into 3 habitat strata** (geographer, sociologist, epidemiologist, architect): spatial definition of the inhabited areas per stratum (blocks dissolved by stratum), largest zones retained | `data/raw/sampling_habitat-areas_reference.gpkg` |
+| **2** | **`2_Cluster-draw`** | **Randomized draw of street edges** within the habitat areas, followed by field verification to confirm locations composing the final clusters selection | `data/raw/sampling_first-draw_clusters.gpkg` |
+| 2.1 | *manual drawing* | **Cluster *areas* are delineated** by hand based on the output of step 2 | `data/raw/_GRAPPES_final-REF.gpkg` |
+| **3** | **`3a_Morphometrics`** | **Computes urban morphometrics** at building-, tessellation- and street- levels | `data/temp/*_momepy_bdg.gpkg`, `*_momepy_tess.gpkg`, `streets.gpkg`, `nodes.gpkg`, `edges.gpkg` |
+| *3.1* | **`3b_Spatial-deprivation-score-representativity`** | **Part A:** scores every building with a graded **spatial deprivation score (−1..8)**. **Part B: audits the diversity and representativity of sampled areas** (in terms of morphometrics) against the AOI (HDSS frame) and against Yopougon as a whole (expansion frame) | `data/output/*buildings_spatial-deprivation-scored.gpkg`, `*blocks_spatial-deprivation-scored.gpkg` |
 
 Run the notebooks in the order `1` → `2` → `3a` → `3b`. Notebooks `1` and `3a` both build the street network
 from the same OSM queries and share the OSMnx HTTP cache (`cache/`), so the sampling phase runs without the
@@ -95,7 +94,7 @@ that step's output.
 Three stages of this workflow depend on human judgement and cannot be run from code. Each is documented where
 it happens, so the automated parts either side remain reproducible.
 
-### Block correction (after notebook `1`)
+### Block correction (step 1.1 — between notebooks `1` and `2`)
 
 Polygonising a street network yields blocks that occasionally merge across missing roads or split on data
 artefacts. The blocks from `1_Urban-blocks` are therefore reviewed in QGIS and corrected by hand; the
@@ -106,13 +105,14 @@ This layer is **not reproducible from code** and must be preserved. Its coverage
 contains only the blocks that were reviewed; areas of the AOI with no blocks are uninhabited and excluded from
 the analysis.
 
-### Habitat categorisation (step 2 — between notebooks `1` and `2`)
+### Habitat categorisation (step 1.2 — between notebooks `1` and `2`)
 
 The urban blocks were **categorised into the three habitat strata by expert consultation** — geographer,
 sociologist, epidemiologist and architect — informed by punctual field visits and consultations with local
 partners. This defined the inhabited areas corresponding to each stratum (blocks dissolved by stratum,
 largest contiguous zones retained), archived as `data/raw/sampling_habitat-areas_reference.gpkg`.
-It is a deliberately coarse expert framework — not a
+
+This layer is **not reproducible from code** and must be preserved. It is a deliberately coarse expert framework — not a
 measurement — whose purpose was to steer the cluster draw; its measured successor is the spatial deprivation score of
 notebook `3b`, which quantifies their agreement.
 
@@ -122,7 +122,7 @@ The random draw in `2_Cluster-draw` yields candidate street paths. Each was **si
 hand into a cluster area**: most clusters are delineated *in place*, around their drawn path, while a minority
 are **displaced following explicit criteria** (fringe position, lock-in between ineligible areas, field
 re-categorisation of the surrounding area, spatial balance). Every cluster is traceable: the final layer
-(`../_GIS/HomeMade/_GRAPPES_final-REF.gpkg`) carries a 1:1 `path_id` link to the originating path and the
+(`_GRAPPES_final-REF.gpkg` - **not reproducible from code** and must be preserved) carries a 1:1 `path_id` link to the originating path and the
 field-verified stratum in `strate`. A few further clusters were re-categorised in place. Notebook `2` §3
 documents and maps all of this.
 
@@ -139,21 +139,18 @@ data/
   output/   analysis products: scored buildings and block mean scores
 ```
 
-Several layers live outside this folder, under `../_GIS/` (study-area boundary, OSM extracts, the final
-cluster areas). Paths are set in the configuration cell of each notebook.
-
 Data files are large and are **not** tracked in version control (see `.gitignore`). Notebooks `1` and `3a`
 regenerate everything in `data/temp/` except the manually corrected blocks.
 
 ## Archival layers — the first random draw
 
-Two layers in `data/raw/` are **archives of the sampling stage**, loaded by `2_Cluster-draw` rather than
+Two layers in `data/raw/` are archives of the sampling stage, loaded by `2_Cluster-draw` rather than
 recomputed:
 
 | Layer | What it is |
 |---|---|
 | `sampling_first-draw_clusters.gpkg` | the 30 candidate street paths drawn at random, from which the cluster areas were then delineated by hand |
-| `sampling_habitat-areas_reference.gpkg` | the **categorical** habitat framework the draw ran against — the expert categorisation of step 2 (see *Manual steps*) |
+| `sampling_habitat-areas_reference.gpkg` | the categorical habitat framework the draw ran against — the expert categorisation of step 1.2 (see *Manual steps*) |
 
 This is deliberate. The draw cannot be reproduced: its random seed was not fixed when it ran, and the street
 network and habitat reference it consumed have since been rebuilt. A re-run would produce *a* draw, but not the
