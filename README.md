@@ -23,7 +23,7 @@ of built environments.
 
 | Step | Notebook / manual | Does | Key outputs |
 |---|---|---|---|
-| **1** | **`1_Urban-blocks`** | Builds the street network (OSM) and defines city **blocks** — the areal units of the sampling — by polygonising it, closing the lagoon shore and splitting on waterways | `data/temp/_check-blocks_geom.gpkg` |
+| **1** | **`1_Urban-blocks`** | **Builds the street network (OSM) and defines city blocks** — the areal units of the sampling — by polygonising the network, closing the lagoon shore and splitting on waterways | `data/temp/_check-blocks_geom.gpkg` |
 | *1.1* | *manual corrections* | **Blocks are corrected by hand in QGIS** — see below | `data/temp/_check-blocks_geom_manual-corr.gpkg` |
 | *1.2* | *manual corrections* | **Expert categorisation of the blocks into 3 habitat strata** (geographer, sociologist, epidemiologist, architect): spatial definition of the inhabited areas per stratum (blocks dissolved by stratum), largest zones retained | `data/raw/sampling_habitat-areas_reference.gpkg` |
 | **2** | **`2_Cluster-draw`** | **Randomized draw of street edges** within the habitat areas, followed by field verification to confirm locations composing the final clusters selection | `data/raw/sampling_first-draw_clusters.gpkg` |
@@ -116,7 +116,7 @@ This layer is **not reproducible from code** and must be preserved. It is a deli
 measurement — whose purpose was to steer the cluster draw; its measured successor is the spatial deprivation score of
 notebook `3b`, which quantifies their agreement.
 
-### Cluster delineation (within step 3)
+### Cluster delineation (step 2.1 — between notebooks `2` and `3a`/`3b`)
 
 The random draw in `2_Cluster-draw` yields candidate street paths. Each was **site-verified and delineated by
 hand into a cluster area**: most clusters are delineated *in place*, around their drawn path, while a minority
