@@ -12,10 +12,9 @@ from the built environment by expert consultation and later consolidated into a 
 **First stage** = survey clusters selected by a **random draw of street paths** within each stratum
 (constraints: ≥ 300 m, ≥ 100 buildings within 50 m, 100 m spacing, waterway quotas), followed by
 **site verification with documented, criteria-based adjustments**: most clusters are delineated in place
-around their drawn path, and a minority are displaced following explicit, documented criteria — every
-adjustment is traceable via `path_id` (see notebook `2` §3). **Second stage** = systematic selection of
-households within clusters. The realised selection is therefore **quasi-random**: inclusion probabilities are
-not recoverable (estimates are reported unweighted), and representativity is audited descriptively in
+around their drawn path, and a minority are displaced following explicit, documented criteria. **Second stage** = 
+systematic selection of households within clusters. The realised selection is therefore **quasi-random**: inclusion
+probabilities are not recoverable (estimates are reported unweighted), and representativity is audited descriptively in
 notebook `3b`. A second survey round added a purposive oversample, including two dedicated contrast clusters
 (notebook `2` §4).
 
