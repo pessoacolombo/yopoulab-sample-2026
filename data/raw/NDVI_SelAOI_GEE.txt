@@ -1,0 +1,197 @@
+// =============================================================================
+// NDVI — Yopougon & Attécoubé (Abidjan, Côte d'Ivoire)  — v3
+// Resolution : 10 m  |  Sensor : Sentinel-2 SR (Level-2A)
+// Author     : YopouLab / Swiss TPH
+// Changes    : added vegetation mask (section 8) + binary mask export (9b)
+// =============================================================================
+
+// -----------------------------------------------------------------------------
+// 1. STUDY AREA
+// -----------------------------------------------------------------------------
+var studyArea = ee.Geometry.Polygon(
+  [[
+    [-4.138,  5.265],//bottom-left  — extent of blocks GDF (whole AOI) + ~1 km margin
+    [-3.726,  5.265],//bottom-right
+    [-3.726,  5.445],//top-right
+    [-4.138,  5.445]//top-left
+  ]],
+  null, false
+);
+
+Map.centerObject(studyArea, 12);
+Map.addLayer(studyArea, {color: 'white'}, 'Study area boundary');
+
+// -----------------------------------------------------------------------------
+// 2. CLOUD-MASK FUNCTION  (Sentinel-2 SR QA60 + SCL scene classification)
+//    SCL is the Level-2A scene classification layer; excluding classes 3, 8, 9, 10, 11
+//    removes cloud shadows, medium and high cloud probability, and cirrus.
+// -----------------------------------------------------------------------------
+function maskS2clouds(image) {
+  var qa  = image.select('QA60');
+  var scl = image.select('SCL');
+
+  // QA60 bitmask: bits 10 (opaque cloud) and 11 (cirrus)
+  var qaMask = qa.bitwiseAnd(1 << 10).eq(0)
+                 .and(qa.bitwiseAnd(1 << 11).eq(0));
+
+  // SCL mask: keep only clear land (4), clear water (6), bare soils (5), unclassified (7)
+  var sclMask = scl.neq(3)   // cloud shadow
+                   .and(scl.neq(8))   // medium cloud probability
+                   .and(scl.neq(9))   // high cloud probability
+                   .and(scl.neq(10))  // thin cirrus
+                   .and(scl.neq(11)); // snow/ice
+
+  return image.updateMask(qaMask.and(sclMask))
+              .divide(10000)
+              .copyProperties(image, ['system:time_start']);
+}
+
+// -----------------------------------------------------------------------------
+// 3. SENTINEL-2 COLLECTION
+//    Date range: full calendar year to maximise scene count.
+//    Cloud threshold raised to 50 % for pre-filter (pixel-level mask does the
+//    real work).  A stricter threshold risks an empty collection over Abidjan.
+// -----------------------------------------------------------------------------
+var startDate = '2023-06-01';  // <-- expand timeframe if the collection still prints 0 scene
+var endDate   = '2026-05-31';
+var CLOUD_PCT = 10;  // <-- raise to 20 if the collection still prints 0 scenes
+
+var s2 = ee.ImageCollection('COPERNICUS/S2_SR_HARMONIZED')
+           .filterBounds(studyArea)
+           .filterDate(startDate, endDate)
+           .filter(ee.Filter.lt('CLOUDY_PIXEL_PERCENTAGE', CLOUD_PCT))
+           .map(maskS2clouds);
+
+// --- DIAGNOSTIC: print scene count BEFORE computing anything else -----------
+// If this prints 0, increase CLOUD_PCT above or widen the date range.
+print('▶ Scene count after filtering:', s2.size());
+print('▶ Band list of first image (should include B4, B8):', s2.first().bandNames());
+
+// -----------------------------------------------------------------------------
+// 4. MEDIAN COMPOSITE clipped to study area
+// -----------------------------------------------------------------------------
+var composite = s2.median().clip(studyArea);
+
+// Guard: if the composite has no valid pixels the band list will be empty.
+// Uncomment the line below to inspect band names before running the export.
+// print('Composite band names:', composite.bandNames());
+
+// -----------------------------------------------------------------------------
+// 5. NDVI
+// -----------------------------------------------------------------------------
+var ndvi = composite.normalizedDifference(['B8', 'B4'])
+                    .rename('NDVI');
+
+// -----------------------------------------------------------------------------
+// 6. VISUALISATION
+// -----------------------------------------------------------------------------
+var ndviVis = {
+  min: -0.2,
+  max:  0.8,
+  palette: [
+    '#d73027', '#fc8d59', '#fee090',
+    '#ffffbf', '#d9ef8b', '#91cf60', '#1a9850'
+  ]
+};
+
+Map.addLayer(ndvi, ndviVis, 'NDVI (10 m, median composite)');
+
+// -----------------------------------------------------------------------------
+// 7. ZONAL STATISTICS
+// -----------------------------------------------------------------------------
+var stats = ndvi.reduceRegion({
+  reducer  : ee.Reducer.mean()
+               .combine(ee.Reducer.min(),    '', true)
+               .combine(ee.Reducer.max(),    '', true)
+               .combine(ee.Reducer.stdDev(), '', true),
+  geometry : studyArea,
+  scale    : 10,
+  maxPixels: 1e10
+});
+
+print('Zonal statistics (study area):', stats);
+
+// -----------------------------------------------------------------------------
+// 8. VEGETATION MASK
+//    Binary raster: 1 = vegetated pixel, 0 = non-vegetated pixel.
+//
+//    Threshold rationale:
+//      0.2 is the lower bound commonly applied in sub-Saharan African contexts
+//      to separate sparse-to-moderate vegetation from bare soil and built-up
+//      surfaces (USGS / Digital Earth Africa guidance; see also Sentinel-2
+//      empirical studies for West Africa).  It is a conservative starting point
+//      — pixels with NDVI ≥ 0.2 are classified as vegetated.
+//
+//    ▼▼▼  ADJUST THIS VALUE TO CHANGE THE VEGETATION / NON-VEGETATION BOUNDARY
+// -----------------------------------------------------------------------------
+var NDVI_THRESHOLD = 0.3;  // <-- change here to experiment with other cutoffs
+//    ▲▲▲
+
+var vegMask = ndvi.gte(NDVI_THRESHOLD)   // 1 where NDVI ≥ threshold, 0 elsewhere
+                  .rename('vegetation_mask')
+                  .clip(studyArea);
+
+// Visualise the mask: green = vegetated, grey = non-vegetated
+Map.addLayer(
+  vegMask,
+  { min: 0, max: 1, palette: ['#d3d3d3', '#d61111'] },
+  'Vegetation mask (NDVI ≥ ' + NDVI_THRESHOLD + ')'
+);
+
+// Compute vegetated area in km²
+var vegArea = vegMask.multiply(ee.Image.pixelArea())
+                     .reduceRegion({
+                       reducer  : ee.Reducer.sum(),
+                       geometry : studyArea,
+                       scale    : 10,
+                       maxPixels: 1e10
+                     });
+
+print('▶ Vegetated area (NDVI ≥ ' + NDVI_THRESHOLD + '):',
+      ee.Number(vegArea.get('vegetation_mask')).divide(1e6).round(), 'km²');
+
+// -----------------------------------------------------------------------------
+// 9. EXPORT TO GOOGLE DRIVE  — two tasks: continuous NDVI + binary mask
+// -----------------------------------------------------------------------------
+// 9a. Continuous NDVI raster
+Export.image.toDrive({
+  image          : ndvi,
+  description    : 'NDVI_SelAOI_10m_v2',
+  folder         : 'GEE_Exports',
+  fileNamePrefix : 'NDVI_SelAOI_10m_v2',
+  region         : studyArea,
+  scale          : 10,
+  crs            : 'EPSG:32630',
+  maxPixels      : 1e10,
+  fileFormat     : 'GeoTIFF'
+});
+
+// 9b. Binary vegetation mask
+Export.image.toDrive({
+  image          : vegMask,
+  description    : 'VegMask_NDVI' + NDVI_THRESHOLD + '_SelAOI_10m',
+  folder         : 'GEE_Exports',
+  fileNamePrefix : 'VegMask_NDVI' + NDVI_THRESHOLD + '_SelAOI_10m',
+  region         : studyArea,
+  scale          : 10,
+  crs            : 'EPSG:32630',
+  maxPixels      : 1e10,
+  fileFormat     : 'GeoTIFF'
+});
+
+// =============================================================================
+// 10. TROUBLESHOOTING GUIDE
+// ─────────────────────────────────────────────────────────────────────────────
+// "No band named B8 / Available band names: []"
+//   → Scene count printed 0.  Increase CLOUD_PCT (line ~40) to 70 or 80,
+//     or widen startDate / endDate.
+//
+// "Zonal statistics: Dictionary (Error)"
+//   → Composite has masked-out pixels everywhere in the AOI.
+//     Try switching from .median() to .mosaic() on line ~63 — mosaic takes
+//     the first valid pixel across all scenes rather than requiring N valid
+//     pixels to compute a median.
+//
+// "Export exceeds memory limit"
+//   → Increase scale from 10 to 20 for a test run, then revert to 10.
+// =============================================================================

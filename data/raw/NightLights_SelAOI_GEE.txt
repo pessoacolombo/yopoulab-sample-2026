@@ -1,0 +1,88 @@
+/******************************************************************************
+ * YopouLab 2026  --  NIGHT-TIME LIGHTS  (native-grid, 3x centroid-preserving)
+ * ---------------------------------------------------------------------------
+ * Source: VIIRS DNB monthly (VCMSLCFG), 'avg_rad' [nW/cm2/sr],
+ *         DRY-SEASON median (Dec-Mar: clearest skies, least lunar/cloud noise).
+ *
+ * INTERPOLATION SCHEME
+ * --------------------
+ * Keep VIIRS in its NATIVE grid (EPSG:4326, ~463 m) -- no reprojection, no
+ * geometry distortion. Subdivide each native pixel 3x3 by scaling the native
+ * projection by 1/3 (SAME corner origin). Because the factor is ODD, the centre
+ * of each 3x3 block coincides with the native centroid, so bilinear resampling
+ * returns the ORIGINAL value there (weight = 1); the surrounding 8 sub-pixels
+ * are distance-weighted blends of the neighbouring native pixels.
+ *
+ * Output pixel ~= 463/3 ~= 154 m. Detail is INTERPOLATED, not real VIIRS
+ * detail -- trust it as a coarse (~500 m) neighbourhood-context variable.
+ *
+ * NOTE: this raster is EPSG:4326 @ ~154 m and is NOT aligned to the 100 m UTM
+ * NDVI grid. The notebook's per-buffer zonal reader still works on any raster,
+ * but don't expect pixel-to-pixel coincidence with the NDVI/other layers.
+ ******************************************************************************/
+
+//// 1. PARAMETERS ///////////////////////////////////////////////////////////
+var START = '2023-06-01';
+var END   = '2026-05-31';
+
+// Dry-season months to keep (Abidjan long dry season). Dec=12 wraps to Jan-Mar.
+// To also include the "petite saison seche", add 8 (August) below.
+var DRY_MONTHS = [12, 1, 2, 3];
+
+// Extent of the blocks GeoDataFrame (whole AOI, out to Cocody/Bingerville) + ~1 km margin
+var studyArea = ee.Geometry.Polygon(
+  [[[-4.138, 5.265], [-3.726, 5.265], [-3.726, 5.445], [-4.138, 5.445]]],
+  null, false);
+
+//// 2. NATIVE PROJECTION + 3x FINER GRID ////////////////////////////////////
+// Grab the projection from a RAW image (median() output carries EE's default
+// 1-degree projection, so never read the grid off the composite).
+var rawProj  = ee.ImageCollection('NOAA/VIIRS/DNB/MONTHLY_V1/VCMSLCFG')
+  .select('avg_rad').first().projection();
+var fineProj = rawProj.scale(1 / 3, 1 / 3);        // 1/3 pixel size, same origin
+
+print('Native VIIRS projection:', rawProj);
+print('Native scale (m):', rawProj.nominalScale());
+print('Fine scale (m):',   fineProj.nominalScale());   // ~154 m
+
+//// 3. VIIRS MONTHLY -> DRY-SEASON MEDIAN (resample on ORIGINALS) ////////////
+// Build an explicit month filter from DRY_MONTHS (unambiguous year-wrap).
+var dryFilter = ee.Filter.or.apply(null, DRY_MONTHS.map(function (m) {
+  return ee.Filter.calendarRange(m, m, 'month');
+}));
+
+var viirs = ee.ImageCollection('NOAA/VIIRS/DNB/MONTHLY_V1/VCMSLCFG')
+  .filterDate(START, END)
+  .filter(dryFilter)                                          // <-- dry season only
+  .select('avg_rad')
+  .map(function (img) { return img.resample('bilinear'); });  // enables bilinear
+
+print('Dry-season monthly images used:', viirs.size());
+
+// Clip to the AOI (region alone doesn't constrain a global composite).
+var ntl = viirs.median().rename('avg_rad').toFloat().clip(studyArea);
+
+//// 4. PREVIEW //////////////////////////////////////////////////////////////
+Map.centerObject(studyArea, 12);
+var vis = {min: 0, max: 60, palette: ['000000', 'feb24c', 'ffffff']};
+Map.addLayer(ntl,                     vis, 'Native ~463 m', false);
+Map.addLayer(ntl.reproject(fineProj), vis, '154 m interpolated');   // forces fine grid
+Map.addLayer(studyArea, {color: 'red'}, 'AOI outline', false);
+
+//// 5. EXPORT (Google Drive, GeoTIFF) ///////////////////////////////////////
+// Do NOT reproject the exported image: the crsTransform below defines the fine
+// output grid, and bilinear resampling from the native pixels happens because
+// resample() was set on the originals. getInfo() pulls the fine grid's exact
+// crs + affine so the export nests perfectly inside the native pixels.
+var fineInfo = fineProj.getInfo();
+Export.image.toDrive({
+  image: ntl,
+  description:    'NightLights_SelAOI_154m_dry',
+  fileNamePrefix: 'NightLights_SelAOI_154m_dry',
+  crs:          fineInfo.crs,           // EPSG:4326
+  crsTransform: fineInfo.transform,     // native transform, scaled 1/3
+  region: studyArea,
+  maxPixels: 1e13,
+  fileFormat: 'GeoTIFF'
+});
+// After it finishes, put the file in:  _GIS/Google-Engine/NightLights/
