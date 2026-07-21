@@ -149,7 +149,7 @@ recomputed:
 
 | Layer | What it is |
 |---|---|
-| `sampling_first-draw_clusters.gpkg` | the 30 candidate street paths drawn at random, from which the cluster areas were then delineated by hand |
+| `sampling_first-draw_clusters.gpkg` | the 30 candidate street paths drawn at random, from which the cluster areas were then delineated by hand in step 1.1 (see *Manual steps*) |
 | `sampling_habitat-areas_reference.gpkg` | the categorical habitat framework the draw ran against — the expert categorisation of step 1.2 (see *Manual steps*) |
 
 This is deliberate. The draw cannot be reproduced: its random seed was not fixed when it ran, and the street
