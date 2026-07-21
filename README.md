@@ -27,7 +27,7 @@ of built environments.
 | *1.1* | *manual corrections* | **Blocks are corrected by hand in QGIS** — see below | `data/temp/_check-blocks_geom_manual-corr.gpkg` |
 | *1.2* | *manual corrections* | **Expert categorisation of the blocks into 3 habitat strata** (geographer, sociologist, epidemiologist, architect): spatial definition of the inhabited areas per stratum (blocks dissolved by stratum), largest zones retained | `data/raw/sampling_habitat-areas_reference.gpkg` |
 | **2** | **`2_Cluster-draw`** | **Randomized draw of street edges** within the habitat areas, followed by field verification to confirm locations composing the final clusters selection | `data/raw/sampling_first-draw_clusters.gpkg` |
-| 2.1 | *manual drawing* | **Cluster *areas* are delineated** by hand based on the output of step 2 | `data/raw/_GRAPPES_final-REF.gpkg` |
+| *2.1* | *manual drawing* | **Cluster *areas* are delineated** by hand based on the output of step 2 | `data/raw/_GRAPPES_final-REF.gpkg` |
 | **3** | **`3a_Morphometrics`** | **Computes urban morphometrics** at building-, tessellation- and street- levels | `data/temp/*_momepy_bdg.gpkg`, `*_momepy_tess.gpkg`, `streets.gpkg`, `nodes.gpkg`, `edges.gpkg` |
 | *3.1* | **`3b_Spatial-deprivation-score-representativity`** | **Part A:** scores every building with a graded **spatial deprivation score (−1..8)**. **Part B: audits the diversity and representativity of sampled areas** (in terms of morphometrics) against the AOI (HDSS frame) and against Yopougon as a whole (expansion frame) | `data/output/*buildings_spatial-deprivation-scored.gpkg`, `*blocks_spatial-deprivation-scored.gpkg` |
 
