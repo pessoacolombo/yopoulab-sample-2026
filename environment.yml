@@ -1,0 +1,27 @@
+name: urban-taxonomy
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - geopandas
+  - momepy
+  - shapely
+  - pyproj
+  - rtree
+  - scikit-learn
+  - matplotlib
+  - scipy
+  - pandas
+  - numpy
+  - networkx
+  - rasterio
+  - ca-certificates
+  - openssl
+  - certifi
+  - ipykernel
+  - libpysal
+  - osmnx
+  - bokeh
+  - clustergram
+  - notebook
+  - pyarrow    # needed to read/write the GeoParquet files in data/ (see data/README.md)
