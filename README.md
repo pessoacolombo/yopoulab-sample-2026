@@ -9,7 +9,7 @@ The workflow has two phases:
 - **SAMPLING (notebooks `1`–`2`)** — define urban blocks as areal units; categorise them into three urban
   "habitats" (strata) by expert consultation; draw survey clusters at random within those strata, with
   documented manual adjustments.
-- **VALIDATION (steps 4a–4b, notebooks `3a`–`3b`)** — compute building-level morphometrics, distil them into a graded
+- **VALIDATION (notebooks `3a`–`3b`)** — compute building-level morphometrics, distil them into a graded
   **spatial deprivation score** (following the *spatial signals of poverty* literature — Taubenböck, Wurm and
   colleagues), and use it to check that the clusters span the range of built environments of the AOI (the
   HDSS frame) and of Yopougon as a whole (the frame of an eventual expansion).
@@ -137,7 +137,6 @@ data/
   temp/     intermediate layers produced by notebooks 1 and 3a (regenerable, except the
             manually corrected blocks — see above)
   output/   analysis products: scored buildings and block mean scores
-cache/      OSMnx HTTP cache (regenerable; safe to delete)
 ```
 
 Several layers live outside this folder, under `../_GIS/` (study-area boundary, OSM extracts, the final
