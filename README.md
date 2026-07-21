@@ -1,3 +1,4 @@
+[![License: CC BY-SA 4.0](https://img.shields.io/badge/License-CC_BY--SA_4.0-lightgrey.svg)](https://creativecommons.org/licenses/by-sa/4.0/)
 # Quasi-randomized survey sampling stratified by urban form — Yopougon, Abidjan
 
 Documents the **sampling strategy** of the YopouLab household survey — a quasi-randomized, two-stage cluster
