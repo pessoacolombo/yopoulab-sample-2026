@@ -35,7 +35,7 @@ sampling. This keeps the provenance honest: the clusters were drawn against the 
 against the score, and notebooks `3a`–`3b` then verify, after the fact, that the sampled areas span the range
 of built environments.
 
-| Step | Notebook / manual | Does | Key outputs |
+| Step | Notebook / manual operation | What it does | Key outputs |
 |---|---|---|---|
 | **1** | **`1_Urban-blocks`** | **Builds the street network (OSM) and defines city blocks** — the areal units of the sampling — by polygonising the network, closing the lagoon shore and splitting on waterways | `data/temp/_check-blocks_geom.gpkg` |
 | *1.1* | *manual corrections* | **Blocks are corrected by hand in QGIS** — see below | `data/temp/_check-blocks_geom_manual-corr.gpkg` |
