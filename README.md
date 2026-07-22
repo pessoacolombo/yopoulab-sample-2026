@@ -10,12 +10,12 @@ survey clusters represent the variety of urban habitat in the study area (AOI).
 Stratified two-stage cluster sampling. **Strata** = three urban habitats (regular / hybrid / informal) defined
 from the built environment by expert consultation and later consolidated into a measured spatial deprivation score.
 **First stage** = survey clusters selected by a **random draw of street paths** within each stratum
-(constraints: ≥ 300 m, ≥ 100 buildings within 50 m, 100 m spacing, waterway quotas), followed by
-**site verification with documented, criteria-based adjustments**: most clusters are delineated in place
+(constraints: ≥ 300 m, ≥ 100 buildings within 50 m, 100 m spacing, waterway quotas), **followed by
+site verification with documented, criteria-based adjustments**: most clusters are delineated in place
 around their drawn path, and a minority are displaced following explicit, documented criteria. **Second stage** = 
-systematic selection of households within clusters. The realised selection is therefore **quasi-random**: inclusion
-probabilities are not recoverable (estimates are reported unweighted), and representativity is audited descriptively in
-notebook `3b`. A second survey round added a purposive oversample, including two dedicated contrast clusters
+**systematic selection of households within clusters**. The realised selection is therefore *quasi-random*: inclusion
+probabilities are not recoverable (estimates are reported unweighted), and representativity of urban habitats is audited
+descriptively in notebook `3b`. A second survey round added a purposive oversample, including two dedicated contrast clusters
 (notebook `2` §4).
 
 ## Workflow
@@ -100,37 +100,45 @@ that step's output.
 Three stages of this workflow depend on human judgement and cannot be run from code. Each is documented where
 it happens, so the automated parts either side remain reproducible.
 
-### Block correction (step 1.1 — between notebooks `1` and `2`)
+### Correction of urban blocks' poylgons (step 1.1 — between notebooks `1` and `2`)
 
 Polygonising a street network yields blocks that occasionally merge across missing roads or split on data
-artefacts. The blocks from `1_Urban-blocks` are therefore reviewed in QGIS and corrected by hand; the
-corrected layer (`data/temp/_check-blocks_geom_manual-corr.gpkg`) is the block definition used downstream
-(notebook `3b`).
+artefacts. The blocks from `1_Urban-blocks` are therefore **reviewed in QGIS and corrected by hand**; the
+corrected layer is the block definition used downstream (notebook `3b`).
 
-This layer is **not reproducible from code** and must be preserved. Its coverage is deliberately partial: it
-contains only the blocks that were reviewed; areas of the AOI with no blocks are uninhabited and excluded from
-the analysis.
+The layer containing these final (hand-adjusted) block definitions is archived as
+`data/temp/_check-blocks_geom_manual-corr.gpkg`. This layer is not reproducible from code and must be
+preserved. Its coverage is deliberately partial: it contains only the blocks that were reviewed; areas of the
+AOI with no blocks are uninhabited and excluded from the analysis.
 
-### Habitat categorisation (step 1.2 — between notebooks `1` and `2`)
+### Urban habitat categorisation (step 1.2 — between notebooks `1` and `2`)
 
-The urban blocks were **categorised into the three habitat strata by expert consultation** — geographer,
-sociologist, epidemiologist and architect — informed by punctual field visits and consultations with local
-partners. This defined the inhabited areas corresponding to each stratum (blocks dissolved by stratum,
-largest contiguous zones retained), archived as `data/raw/sampling_habitat-areas_reference.gpkg`.
+The urban blocks were **categorised into the three strata (distinct urban habitats) by expert consultation** —
+with backgrounds in geography, sociology, epidemiology and architecture — informed by punctual field visits.
+This categorisation defined macro areas corresponding to each stratum (contiguous areas formed by blocks of a
+same stratum). The three largest contiguous zones in each stratum were retained, to frame the random draw of
+street segments (only edges within or adjacent to the 6 macro areas could be selected).
 
-This layer is **not reproducible from code** and must be preserved. It is a deliberately coarse expert framework — not a
-measurement — whose purpose was to steer the cluster draw; its measured successor is the spatial deprivation score of
+These macro areas are archived as `data/raw/sampling_habitat-areas_reference.gpkg`. This layer is not
+reproducible from code and must be preserved. It is a deliberately coarse expert framework — not a measurement
+— whose purpose was to steer the cluster draw; its measured successor is the spatial deprivation score of
 notebook `3b`, which quantifies their agreement.
 
-### Cluster delineation (step 2.1 — between notebooks `2` and `3a`/`3b`)
+### Cluster area delineation (step 2.1 — between notebooks `2` and `3a`/`3b`)
 
-The random draw in `2_Cluster-draw` yields candidate street paths. Each was **site-verified and delineated by
-hand into a cluster area**: most clusters are delineated *in place*, around their drawn path, while a minority
-are **displaced following explicit criteria** (fringe position, lock-in between ineligible areas, field
-re-categorisation of the surrounding area, spatial balance). Every cluster is traceable: the final layer
-(`_GRAPPES_final-REF.gpkg` - **not reproducible from code** and must be preserved) carries a 1:1 `path_id` link to the originating path and the
-field-verified stratum in `strate`. A few further clusters were re-categorised in place. Notebook `2` §3
-documents and maps all of this.
+The random draw in `2_Cluster-draw` yields candidate paths: selected edges form 3x10 = 30 randomly selected
+paths. Each path was **site-verified and delineated by hand into a cluster area**: most clusters were
+delineated *in place* (i.e., around their drawn path), while **a minority needed to be displaced** from their 
+original path location. Any displacement was determined by **explicit criteria, while preserving (qualitatively):
+the spatial balance** of the distribution of clusters. The criteria for displacement were: (i) paths locked-in
+between unhinhabited areas moved to the next, closest inhabited path within the same stratum; (ii) paths
+landing in areas that were misclassified in step 1.2 above (e.g., boundaries between urban habitats can be
+ambiguous and thus prone to misclassification) were moved to another area fitting their original stratum
+attribution.
+
+Every cluster is traceable: the final layer (`_GRAPPES_final-REF.gpkg` - **not reproducible from code** and must
+be preserved) carries a 1:1 `path_id` link to the originating path and the field-verified stratum in `strate`. A
+few further clusters were re-categorised in place. Notebook `2` §3 documents and maps all of this.
 
 ## Data
 
