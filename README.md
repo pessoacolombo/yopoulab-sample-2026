@@ -1,8 +1,8 @@
 [![License: CC BY-SA 4.0](https://img.shields.io/badge/License-CC_BY--SA_4.0-yellow.svg)](https://creativecommons.org/licenses/by-sa/4.0/)
 # Quasi-randomized survey sampling stratified by urban form — Yopougon, Abidjan
 
-Documents the **sampling strategy** of the YopouLab household survey — a quasi-randomized, two-stage cluster
-design **stratified by urban form** — and its **validation**: a morphometric audit of how well the selected
+Documents the **sampling strategy** of the Yopougon Urban Lab (YopouLab) household survey — a quasi-randomized, two-stage cluster
+design stratified by urban form — and its validation - a morphometric audit of how well the selected
 survey clusters represent the variety of urban habitat in the study area (AOI).
 
 ## The sampling design, in brief
@@ -26,13 +26,13 @@ The workflow has two phases:
   "habitats" (strata) by expert consultation; draw survey clusters at random within those strata, with
   documented manual adjustments.
 - **VALIDATION (notebooks `3a`–`3b`)** — compute building-level morphometrics, distil them into a graded
-  **spatial deprivation score** (following the *spatial signals of poverty* literature — Taubenböck, Wurm and
+  spatial deprivation score (following the *spatial signals of poverty* literature — Taubenböck, Wurm and
   colleagues), and use it to check that the clusters span the range of built environments of the AOI (the
   HDSS frame) and of Yopougon as a whole (the frame of an eventual expansion).
 
 **The fieldwork itself sits between the two phases** — the validation instrument (the score) post-dates the
 sampling. This keeps the provenance honest: the clusters were drawn against the expert habitat framework, not
-against the score, and notebooks `3a`–`3b` then verify, after the fact, that the sampled areas span the range
+against the score, and notebooks `3a`–`3b` then verify, *post hoc*, that the sampled areas span the range
 of built environments.
 
 | Step | Notebook / manual operation | What it does | Key outputs |
